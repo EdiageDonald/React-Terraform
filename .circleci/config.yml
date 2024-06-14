@@ -9,7 +9,7 @@ jobs:
       - checkout # checks out of the current branch
       - run: # run a command
           name: Show current branch # name of command
-          command: echo ${CURRENT_BRANCH} # Log the branch we are checking out from
+          command: echo ${CIRCLE_BRANCH} # Log the branch we are checking out from
       - restore_cache: 
         keys:
           - app-{{ checksum "package.json" }} 
@@ -24,16 +24,16 @@ jobs:
 
   deploy-to-aws-s3:
     docker:
-      -image: circleci/node:16.14.0 
+      - image: circleci/node:16.14.0 
     working_directory: ~/repo # repo that has all circleci files  
     steps: 
       - checkout
       - run:
           name: Show current branch
-          command: echo ${CURRENT_BRANCH}
+          command: echo ${CIRCLE_BRANCH}
       - run: # we need to install the aws cli
           name: Installing AWS CLI
-          working_directory: /  
+          #working_directory: /  
           command: |
             sudo apt-get -y -qq update
             sudo apt-get install -y awscli
@@ -49,10 +49,10 @@ jobs:
       - run: 
           name: Deploy to AWS S3
           command: |
-            if [ "${CURRENT_BRANCH}" == "master" ]
+            if [ "${CIRCLE_BRANCH}" == "master" ]
             then 
               aws --region ${AWS_REGION} s3 sync ~/repo/build s3://${AWS_BUCKET_PRODUCTION} --delete  
-            elif [ "${CURRENT_BRANCH}" == "staging" ]  
+            elif [ "${CIRCLE_BRANCH}" == "staging" ]  
             then
               aws --region ${AWS_REGION} s3 sync ~/repo/build s3://${AWS_BUCKET_STAGING} --delete
             else
@@ -61,16 +61,16 @@ jobs:
 
     deploy-to-aws-cloudfront:
       docker:
-        -image: circleci/node:16.14.0 
+        - image: circleci/node:16.14.0 
       working_directory: ~/repo # repo that has all circleci files  
       steps: 
         - checkout
         - run:
             name: Show current branch
-            command: echo ${CURRENT_BRANCH}
+            command: echo ${CIRCLE_BRANCH}
         - run: # we need to install the aws cli
             name: Installing AWS CLI
-            working_directory: /  
+           # working_directory: /  
             command: |
               sudo apt-get -y -qq update
               sudo apt-get install -y awscli
@@ -87,15 +87,14 @@ jobs:
             name: Deploy to AWS Cloudfront
             command: |
               aws configure set preview.cloudfront
-              if [ "${CURRENT_BRANCH}" == "master" ]
+              if [ "${CIRCLE_BRANCH}" == "master" ]
               then 
                 aws cloudfront create-invalidation --distribution-id ${PRODUCTION_DISTRIBUTION_ID} --paths /\*
-              elif [ "${CURRENT_BRANCH}" == "staging" ]  
+              elif [ "${CIRCLE_BRANCH}" == "staging" ]  
               then
                 aws cloudfront create-invalidation --distribution-id ${STAGING_DISTRIBUTION_ID} --paths /\*
               else
                 aws cloudfront create-invalidation --distribution-id ${DEV_DISTRIBUTION_ID} --paths /\*  
-              fi  
 
 workflows:
   build_and_deploy:
