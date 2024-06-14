@@ -15,16 +15,16 @@ jobs:
           name: Show current branch # name of command
           command: echo ${CIRCLE_BRANCH} # Log the branch we are checking out from
       - restore_cache: 
-        keys:
-          - app-{{ checksum "package.json" }} 
-          - app-
+          keys:
+            - app-{{ checksum "package.json" }} 
+            - app-
       - run:
-        name: Install dependencies
-        command: npm install    
+          name: Install dependencies
+          command: npm install    
       - save_cache:
-        paths:
-          - node_modules
-        key: app-{{checksum "package.json"}}  
+          paths:
+            - node_modules
+          key: app-{{checksum "package.json"}}  
 
   deploy-to-aws-s3:
     docker:
