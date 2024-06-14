@@ -78,14 +78,14 @@ jobs:
             sudo apt-get -y -qq update
             sudo apt-get install -y awscli
             sudo apt-get install -y python-pip python-dev build-essential  
-        - run: # we need to build the actual project
-            name: Build Project
-            command: |
-              npm install
-              npm run build
-              cd build 
-              zip ../build.zip -r * .[^.]*
-              echo "Build successful"
+      - run: # we need to build the actual project
+          name: Build Project
+          command: |
+            npm install
+            npm run build
+            cd build 
+            zip ../build.zip -r * .[^.]*
+            echo "Build successful"
       - run:
           name: Deploy to CloudFront
           command: |
