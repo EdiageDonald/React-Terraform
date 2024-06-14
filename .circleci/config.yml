@@ -89,19 +89,19 @@ jobs:
       - run:
           name: Deploy to CloudFront
           command: |
-            aws configure set aws_access_key_id "${AWS_ACCESS_KEY_ID}"
-            aws configure set aws_secret_access_key "${AWS_SECRET_ACCESS_KEY}"
-            aws configure set default.region "${AWS_REGION}"
+            aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
+            aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
+            aws configure set default.region ${AWS_REGION}
 
             aws configure set preview.cloudfront
             if [ "${CIRCLE_BRANCH}" == "master" ]
             then 
-              aws cloudfront create-invalidation --distribution-id ${PRODUCTION_DISTRIBUTION_ID} --paths /\*
+              aws cloudfront create-invalidation --distribution-id ${PRODUCTION_DISTRIBUTION_ID} --paths "/*"
             elif [ "${CIRCLE_BRANCH}" == "staging" ]  
             then
-              aws cloudfront create-invalidation --distribution-id ${STAGING_DISTRIBUTION_ID} --paths /\*
+              aws cloudfront create-invalidation --distribution-id ${STAGING_DISTRIBUTION_ID} --paths "/*"
             else
-              aws cloudfront create-invalidation --distribution-id ${DEV_DISTRIBUTION_ID} --paths /\* 
+              aws cloudfront create-invalidation --distribution-id ${DEV_DISTRIBUTION_ID} --paths "/*" 
             fi  
 
 workflows:
