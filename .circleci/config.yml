@@ -3,55 +3,33 @@ version: 2.1
 executors:
   node-executor:
     docker:
-      - image: circleci/node:16.13.0
+      - image: circleci/node:16.14.0
 
 jobs:
-  build: # this name could be customed
+  build:
     executor: node-executor
-    working_directory: ~/repo # repo that has all circleci files
-    steps: 
-      - checkout # checks out of the current branch
-      - restore_cache: 
-          keys:
-            - app-{{ checksum "package.json" }} 
-            #- app-
+    steps:
+      - checkout
+      - restore_cache:
+          key: app-{{ checksum "package.json" }}
       - run:
           name: Install dependencies
-          command: npm install    
+          command: npm install
       - save_cache:
           paths:
             - node_modules
-          key: app-{{checksum "package.json"}}  
-      - run: # run a command
+          key: app-{{ checksum "package.json" }}
+       - run: # run a command
           name: Show current branch # name of command
-          command: echo ${CIRCLE_BRANCH} # Log the branch we are checking out from     
+          command: echo ${CIRCLE_BRANCH} # Log the branch we are checking out from  
 
   deploy-to-aws-s3:
     docker:
-      - image: circleci/python:3.8 
-    working_directory: ~/repo # repo that has all circleci files  
-    steps: 
+      - image: circleci/python:3.8
+    steps:
       - checkout
       - run:
-          name: Show current branch
-          command: echo ${CIRCLE_BRANCH}
-      - run: # we need to install the aws cli
-          name: Installing AWS CLI
-          #working_directory: /  
-          command: |
-            sudo apt-get -y -qq update
-            sudo apt-get install -y awscli
-            sudo apt-get install -y python-pip python-dev build-essential  
-      - run: # we need to build the actual project
-          name: Build Project
-          command: |
-            npm install
-            npm run build
-            cd build 
-            zip ../build.zip -r * .[^.]*
-            echo "Build successful"
-      - run: 
-          name: Deploy to AWS S3
+          name: Deploy to S3
           command: |
             if [ "${CIRCLE_BRANCH}" == "master" ]
             then 
@@ -61,65 +39,45 @@ jobs:
               aws --region ${AWS_REGION} s3 sync ~/repo/build s3://${AWS_BUCKET_STAGING} --delete
             else
               aws --region ${AWS_REGION} s3 sync ~/repo/build s3://${AWS_DEV_BUCKET} --delete  
-            fi  
+            fi
 
-    deploy-to-aws-cloudfront:
-      docker:
-        - image: circleci/python:3.8 
-      working_directory: ~/repo # repo that has all circleci files  
-      steps: 
-        - checkout
-        - run:
-            name: Show current branch
-            command: echo ${CIRCLE_BRANCH}
-        - run: # we need to install the aws cli
-            name: Installing AWS CLI
-           # working_directory: /  
-            command: |
-              sudo apt-get -y -qq update
-              sudo apt-get install -y awscli
-              sudo apt-get install -y python-pip python-dev build-essential  
-        - run: # we need to build the actual project
-            name: Build Project
-            command: |
-              npm install
-              npm run build
-              cd build 
-              zip ../build.zip -r * .[^.]*
-              echo "Build successful"
-        - run: 
-            name: Deploy to AWS Cloudfront
-            command: |
-              aws configure set preview.cloudfront
-              if [ "${CIRCLE_BRANCH}" == "master" ]
-              then 
-                aws cloudfront create-invalidation --distribution-id ${PRODUCTION_DISTRIBUTION_ID} --paths /\*
-              elif [ "${CIRCLE_BRANCH}" == "staging" ]  
-              then
-                aws cloudfront create-invalidation --distribution-id ${STAGING_DISTRIBUTION_ID} --paths /\*
-              else
-                aws cloudfront create-invalidation --distribution-id ${DEV_DISTRIBUTION_ID} --paths /\*  
+  deploy-to-aws-cloudfront:
+    docker:
+      - image: circleci/python:3.8
+    steps:
+      - checkout
+      - run:
+          name: Deploy to CloudFront
+          command: |
+            aws configure set preview.cloudfront
+            if [ "${CIRCLE_BRANCH}" == "master" ]
+            then 
+              aws cloudfront create-invalidation --distribution-id ${PRODUCTION_DISTRIBUTION_ID} --paths /\*
+            elif [ "${CIRCLE_BRANCH}" == "staging" ]  
+            then
+              aws cloudfront create-invalidation --distribution-id ${STAGING_DISTRIBUTION_ID} --paths /\*
+            else
+              aws cloudfront create-invalidation --distribution-id ${DEV_DISTRIBUTION_ID} --paths /\* 
 
 workflows:
   build_and_deploy:
     jobs:
       - build
       - deploy-to-aws-s3:
-        requires:
-          - build
-        filters:
-          branches:
-            only:
-              - develop
-              - staging
-              - master
+          requires:
+            - build
+          filters:
+            branches:
+              only:
+                - develop
+                - staging
+                - master
       - deploy-to-aws-cloudfront:
-        requires:
-          - build
-        filters:
-          branches:
-            only:
-              - develop
-              - staging
-              - master        
-
+          requires:
+            - build
+          filters:
+            branches:
+              only:
+                - develop
+                - staging
+                - master
