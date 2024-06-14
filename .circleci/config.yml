@@ -93,7 +93,6 @@ jobs:
             aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
             aws configure set default.region ${AWS_REGION}
 
-            aws configure set preview.cloudfront
             if [ "${CIRCLE_BRANCH}" == "master" ];
             then 
               aws cloudfront create-invalidation --distribution-id ${PRODUCTION_DISTRIBUTION_ID} --paths "/*"
