@@ -8,7 +8,7 @@ executors:
 jobs:
   build: # this name could be customed
     executor: node-executor
-    working_directory: ~/repo # repo that has all circleci files
+    #working_directory: ~/repo # repo that has all circleci files
     steps: 
       - checkout # checks out of the current branch
       - run: # run a command
@@ -29,7 +29,7 @@ jobs:
   deploy-to-aws-s3:
     docker:
       - image: circleci/python:3.8 
-    working_directory: ~/repo # repo that has all circleci files  
+    #working_directory: ~/repo # repo that has all circleci files  
     steps: 
       - checkout
       - run:
@@ -66,7 +66,7 @@ jobs:
     deploy-to-aws-cloudfront:
       docker:
         - image: circleci/python:3.8 
-      working_directory: ~/repo # repo that has all circleci files  
+      #working_directory: ~/repo # repo that has all circleci files  
       steps: 
         - checkout
         - run:
