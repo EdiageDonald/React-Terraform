@@ -94,10 +94,10 @@ jobs:
             aws configure set default.region ${AWS_REGION}
 
             aws configure set preview.cloudfront
-            if [ "${CIRCLE_BRANCH}" == "master" ]
+            if [ "${CIRCLE_BRANCH}" == "master" ];
             then 
               aws cloudfront create-invalidation --distribution-id ${PRODUCTION_DISTRIBUTION_ID} --paths "/*"
-            elif [ "${CIRCLE_BRANCH}" == "staging" ]  
+            elif [ "${CIRCLE_BRANCH}" == "staging" ];  
             then
               aws cloudfront create-invalidation --distribution-id ${STAGING_DISTRIBUTION_ID} --paths "/*"
             else
