@@ -1,9 +1,13 @@
 version: 2.1
 
+executors:
+  node-executor:
+    docker:
+      - image: circleci/node:16.13.0
+
 jobs:
   build: # this name could be customed
-    docker:
-      -image: circleci/node:16.13.0
+    executor: node-executor
     working_directory: ~/repo # repo that has all circleci files
     steps: 
       - checkout # checks out of the current branch
@@ -24,7 +28,7 @@ jobs:
 
   deploy-to-aws-s3:
     docker:
-      - image: circleci/node:16.14.0 
+      - image: circleci/python:3.8 
     working_directory: ~/repo # repo that has all circleci files  
     steps: 
       - checkout
@@ -61,7 +65,7 @@ jobs:
 
     deploy-to-aws-cloudfront:
       docker:
-        - image: circleci/node:16.14.0 
+        - image: circleci/python:3.8 
       working_directory: ~/repo # repo that has all circleci files  
       steps: 
         - checkout
