@@ -20,7 +20,7 @@ jobs:
           paths:
             - node_modules
           key: app-{{ checksum "package.json" }}
-       - run: # run a command
+      - run: # run a command
           name: Show current branch # name of command
           command: echo ${CIRCLE_BRANCH} # Log the branch we are checking out from  
 
