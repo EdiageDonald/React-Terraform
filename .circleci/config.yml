@@ -49,10 +49,10 @@ jobs:
     executor: node-executor
     steps:
       - checkout
+      - *show-current-branch-name 
       - *restore-cache
       - *install-dependencies
-      - *save-cache:
-      - *show-current-branch-name 
+      - *save-cache
   linting:
     executor: node-executor
     steps:
