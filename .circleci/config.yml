@@ -189,10 +189,10 @@ jobs:
 workflows:
   build_and_deploy:
     jobs:
-      - build
+      - test
       - notify-via-slack:
           requires:
-           - build
+           - test
           filters:
             branches:
               only:
