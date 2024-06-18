@@ -9,7 +9,7 @@ executors:
     working_directory: ~/repo
   slack-executor:
     docker:
-      - image: 'cibuild/base:latest'
+      - image: 'circleci/node:16.13.0'
     resource_class: small        
 
 aliases:
@@ -126,8 +126,8 @@ jobs:
     steps:
       - run: echo "Slack Notification"
       - slack/notify:
-          event:  'always'
-          channel: 'terraform_circleci'
+          event:  "always"
+          channel: "terraform_circleci"
           template: '' # custom template empty string or paste generic template name
           custom: | 
             {
