@@ -1,10 +1,16 @@
 version: 2.1
 
+orbs:
+  slack: circleci/slack@4.2.0
 executors:
   node-executor:
     docker:
       - image: circleci/node:16.13.0
     working_directory: ~/repo
+  slack-executor:
+    docker:
+      - image: 'cibuild/base:latest'
+    resource_class: small        
 
 aliases:
   - &show-current-branch-name 
@@ -114,13 +120,77 @@ jobs:
               aws cloudfront create-invalidation --distribution-id ${STAGING_DISTRIBUTION_ID} --paths "/*"
             else
               aws cloudfront create-invalidation --distribution-id ${DEV_DISTRIBUTION_ID} --paths "/*" 
-            fi  
+            fi 
+  notify-via-slack:
+    executor: slack-executor
+    steps:
+      - run: echo "Slack Notification"
+      - slack/notify:
+          event:  'always'
+          channel: 'terraform_circleci'
+          template: '' # custom template empty string or paste generic template name
+          custom: | 
+            {
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text", 
+                    "text": "${CIRCLE_BRANCH} branch deployment to AWS s3 and cloudfront is complete 👍",
+                    "emoji": "true"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields":[
+                    { 
+                      "type": "mrkdwn",
+                      "text": "*Project*:\n$CIRCLE_PROJECT_REPONAME"
+                    },
+                    { 
+                      "type": "mrkdwn",
+                      "text": "*Branch*:\n$CIRCLE_BRANCH"
+                    },
+                    { 
+                      "type": "mrkdwn",
+                      "text": "*When*:\n$(date + '%m/%d/%Y %T')"
+                    }, 
+                    { 
+                      "type": "mrkdwn",
+                      "text": "*Build*:\n$CIRCLE_BUILD_NUM"
+                    },
+                    { 
+                      "type": "mrkdwn",
+                      "text": "*Author*:\n$CIRCLE_PROJECT_USERNAME"
+                    }, 
+                  ]
+                }, 
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "View job"
+                      },
+                      "url": "${CIRCLE_BUILD_URL}"
+                    }
+                  ]
+                }
+              ]
+            }
+
+  test:
+    executor: node-executor
+    steps: 
+      - run: echo "Testing my app"          
 
 workflows:
   build_and_deploy:
     jobs:
       - build
-      - linting:
+      - notify-via-slack:
           requires:
            - build
           filters:
@@ -129,31 +199,40 @@ workflows:
                 - develop
                 - staging
                 - master
-      - prettier:
-          requires:
-           - build
-          filters:
-            branches:
-              only:
-                - develop
-                - staging
-                - master            
+      # - prettier:
+      #     requires:
+      #      - build
+      #     filters:
+      #       branches:
+      #         only:
+      #           - develop
+      #           - staging
+      #           - master            
 
-      - deploy-to-aws-s3:
-          requires:
-            - prettier
-          filters:
-            branches:
-              only:
-                - develop
-                - staging
-                - master
-      - deploy-to-aws-cloudfront:
-          requires:
-            - deploy-to-aws-s3
-          filters:
-            branches:
-              only:
-                - develop
-                - staging
-                - master
+      # - deploy-to-aws-s3:
+      #     requires:
+      #       - prettier
+      #     filters:
+      #       branches:
+      #         only:
+      #           - develop
+      #           - staging
+      #           - master
+      # - deploy-to-aws-cloudfront:
+      #     requires:
+      #       - deploy-to-aws-s3
+      #     filters:
+      #       branches:
+      #         only:
+      #           - develop
+      #           - staging
+      #           - master
+      # - notify-via-slack:
+      #     requires:
+      #       - deploy-to-aws-cloudfront
+      #     filters:
+      #       branches:
+      #         only:
+      #           - develop
+      #           - staging
+      #           - master          
