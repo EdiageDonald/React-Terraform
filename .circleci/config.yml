@@ -125,44 +125,44 @@ jobs:
     executor: slack-executor
     steps:
       - run: echo "Slack Notification"
-      - slack/notify:
-          event:  "always"
-          channel: "terraform_circleci"
-          template: '' # custom template empty string or paste generic template name
-          custom: | 
-            {
+      - run:
+          name: "Send Slack Notification"
+          command: |
+            echo "Sending notification to Slack..."
+            curl -X POST -H 'Content-type: application/json' \
+            --data '{
               "blocks": [
                 {
                   "type": "header",
                   "text": {
                     "type": "plain_text", 
-                    "text": "${CIRCLE_BRANCH} branch deployment to AWS s3 and cloudfront is complete 👍",
-                    "emoji": "true"
+                    "text": "'"${CIRCLE_BRANCH} branch deployment to AWS s3 and cloudfront is complete 👍"'",
+                    "emoji": true
                   }
                 },
                 {
                   "type": "section",
-                  "fields":[
+                  "fields": [
                     { 
                       "type": "mrkdwn",
-                      "text": "*Project*:\n$CIRCLE_PROJECT_REPONAME"
+                      "text": "*Project*:\n'"$CIRCLE_PROJECT_REPONAME"'"
                     },
                     { 
                       "type": "mrkdwn",
-                      "text": "*Branch*:\n$CIRCLE_BRANCH"
+                      "text": "*Branch*:\n'"$CIRCLE_BRANCH"'"
                     },
                     { 
                       "type": "mrkdwn",
-                      "text": "*When*:\n$(date + '%m/%d/%Y %T')"
+                      "text": "*When*:\n'"$(date +'%m/%d/%Y %T')"'"
                     }, 
                     { 
                       "type": "mrkdwn",
-                      "text": "*Build*:\n$CIRCLE_BUILD_NUM"
+                      "text": "*Build*:\n'"$CIRCLE_BUILD_NUM"'"
                     },
                     { 
                       "type": "mrkdwn",
-                      "text": "*Author*:\n$CIRCLE_PROJECT_USERNAME"
-                    } 
+                      "text": "*Author*:\n'"$CIRCLE_PROJECT_USERNAME"'"
+                    }
                   ]
                 }, 
                 {
@@ -174,12 +174,12 @@ jobs:
                         "type": "plain_text",
                         "text": "View job"
                       },
-                      "url": "${CIRCLE_BUILD_URL}"
+                      "url": "'"${CIRCLE_BUILD_URL}"'"
                     }
                   ]
                 }
               ]
-            }
+            }' $SLACK_WEBHOOK_URL
 
   test:
     executor: node-executor
